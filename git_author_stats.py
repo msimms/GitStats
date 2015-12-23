@@ -23,30 +23,31 @@ authorLines = collections.Counter()
 authorExpr = re.compile(r'[a-zA-Z ]+')
 timestampExpr = re.compile(r'[\d]+-[\d]+-[\d]+\s[\d]+:[\d]+:[\d]+')
 
-def IsEmpty(sourceStr):
+def is_empty(sourceStr):
 	return len(sourceStr) == 0
 
-def IsComment(sourceStr, fileExt):
+def is_comment(sourceStr, fileExt):
 	if fileExt in ['.c', '.cpp', '.cxx', '.h', '.m', '.java']:
 		if sourceStr.find('//') == 0 or sourceStr.find('/*') == 0:
 			return True
-	elif fileExt is '.py':
+	elif fileExt in ['.py']:
 		if sourceStr.find('#') == 0:
 			return True
-	elif fileExt is '.asm':
+	elif fileExt in ['.asm']:
 		if sourceStr.find(';') == 0:
 			return True
 	return False
 
-def IsSourceLine(sourceStr, fileExt):
+def is_source_line(sourceStr, fileExt):
 	if fileExt in ['.c', '.cpp', '.cxx', '.h', '.m', '.java']:
 		if sourceStr.find(';') > 0:
 			return True
-	elif fileExt is '.py':
-		return len(sourceStr) > 0
+	elif fileExt in ['.py']:
+		if len(sourceStr) > 0:
+			return True
 	return False
 
-def ParseLine(line):
+def parse_line(line):
 	try:
 		asciiLine = line.decode('ascii')
 		leftParenIndex = line.find('(')
@@ -70,7 +71,7 @@ def ParseLine(line):
 		pass
 	return "", "", ""
 
-def AnalyzeFile(file, startTime, ignoreComments, ignoreEmpty, onlySourceLines, extensions):
+def analyze_file(file, startTime, ignoreComments, ignoreEmpty, onlySourceLines, extensions):
 	fileName, fileExt = os.path.splitext(file)
 	if fileExt not in extensions:
 		return
@@ -80,24 +81,24 @@ def AnalyzeFile(file, startTime, ignoreComments, ignoreEmpty, onlySourceLines, e
 	blameLines = blameOutput.split('\n')
 
 	for line in blameLines:
-		authorStr, timestampStr, sourceStr = ParseLine(line)
+		authorStr, timestampStr, sourceStr = parse_line(line)
 
 		if len(authorStr) > 0 and len(timestampStr) > 0 and len(sourceStr) > 0:
 			timestamp = time.mktime(datetime.datetime.strptime(timestampStr, "%Y-%m-%d %H:%M:%S").timetuple())
 			strippedStr = sourceStr.strip()
-			if ignoreComments and IsComment(strippedStr, fileExt):
+			if ignoreComments and is_comment(strippedStr, fileExt):
 				continue
-			if ignoreEmpty and IsEmpty(strippedStr):
+			if ignoreEmpty and is_empty(strippedStr):
 				continue
-			if onlySourceLines and not IsSourceLine(strippedStr, fileExt):
+			if onlySourceLines and not is_source_line(strippedStr, fileExt):
 				continue
 			if timestamp >= startTime:
 				authorLines[authorStr] = authorLines[authorStr] + 1
 
-def AnalyzeRepo(repo, startTime, ignoreComments, ignoreEmpty, onlySourceLines, extensions):
+def analyze_repo(repo, startTime, ignoreComments, ignoreEmpty, onlySourceLines, extensions):
 	for root, dirs, files in os.walk(repo):
 		for file in files:
-			AnalyzeFile(os.path.join(root, file), startTime, ignoreComments, ignoreEmpty, onlySourceLines, extensions)
+			analyze_file(os.path.join(root, file), startTime, ignoreComments, ignoreEmpty, onlySourceLines, extensions)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--repo", required=True)
@@ -115,7 +116,7 @@ if args.startTime is not None:
 	startTime = time.mktime(datetime.datetime.strptime(args.startTime, "%Y-%m-%d").timetuple())
 
 os.chdir(args.repo)
-AnalyzeRepo(args.repo, startTime, args.ignoreComments, args.ignoreEmpty, args.onlySourceLines, extensions)
+analyze_repo(args.repo, startTime, args.ignoreComments, args.ignoreEmpty, args.onlySourceLines, extensions)
 
 for author in authorLines:
 	print author + "\t" + str(authorLines[author])
