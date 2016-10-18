@@ -115,8 +115,9 @@ extensions = args.extensions.split(',')
 if args.startTime is not None:
 	startTime = time.mktime(datetime.datetime.strptime(args.startTime, "%Y-%m-%d").timetuple())
 
-os.chdir(args.repo)
-analyze_repo(args.repo, startTime, args.ignoreComments, args.ignoreEmpty, args.onlySourceLines, extensions)
+fullPath = os.path.realpath(args.repo)
+os.chdir(fullPath)
+analyze_repo(fullPath, startTime, args.ignoreComments, args.ignoreEmpty, args.onlySourceLines, extensions)
 
 for author in authorLines:
 	print author + "\t" + str(authorLines[author])
