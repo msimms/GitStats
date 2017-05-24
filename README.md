@@ -4,11 +4,11 @@ This project exists to perform SLOC (Source Line of Code) counts on local git re
 
 Example Uses:
 
-# To pull SLOC-by-author stats on a particular repo:
+To obtain SLOC-by-author stats on a particular repo:
 `python git_author_stats.py --repo /path/to/repo`
 
-# To pull SLOC-by-author stats for all modifications starting in 2017:
+To obtain SLOC-by-author stats for all modifications starting in 2017:
 `python git_author_stats.py --repo /path/to/repo --start-time 2017-01-01`
 
-# To pull SLOC-by-author stats for all modifications in 2016:
+To obtain SLOC-by-author stats for all modifications in 2016:
 `python git_author_stats.py --repo /path/to/repo --start-time 2016-01-01 --end-time 2017-01-01`
