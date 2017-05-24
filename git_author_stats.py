@@ -101,12 +101,12 @@ def analyze_repo(repo, start_time, ignore_comments, ignore_empty, only_source_li
 			analyze_file(os.path.join(root, file), start_time, ignore_comments, ignore_empty, only_source_lines, extensions)
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--repo", required=True)
-parser.add_argument("--start-time", required=False)
-parser.add_argument("--ignore-comments", default=True, required=False)
-parser.add_argument("--ignore-empty", default=True, required=False)
-parser.add_argument("--only-source-lines", default=True, required=False)
-parser.add_argument("--extensions", default=".c,.cpp,.h,.m,.py", required=False)
+parser.add_argument("--repo", required=True, help="Path of the local repo to examine. ex: --repo /src/my_repo/")
+parser.add_argument("--start-time", required=False, help="Filter out lines that were modified before this time. ex: --repo start-time 2017-01-01")
+parser.add_argument("--ignore-comments", default=True, required=False, help="Filter out lines that start with a comment.")
+parser.add_argument("--ignore-empty", default=True, required=False, help="Filter out lines that only contain whitespace.")
+parser.add_argument("--only-source-lines", default=True, required=False, help="Only consider lines that appear to be source code lines, such as those that contain a semicolon in C-based languages.")
+parser.add_argument("--extensions", default=".c,.cpp,.h,.m,.py", required=False, help="Only consider files with certain extensions. ex: --extensions .c,.cpp,.h")
 args = parser.parse_args()
 
 start_time = 0
