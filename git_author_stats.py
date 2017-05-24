@@ -119,5 +119,10 @@ full_path = os.path.realpath(args.repo)
 os.chdir(full_path)
 analyze_repo(full_path, start_time, args.ignore_comments, args.ignore_empty, args.only_source_lines, extensions)
 
+total = 0
 for author in author_lines:
 	print author + "\t" + str(author_lines[author])
+	total += author_lines[author]
+
+print "Total\t" + str(total)
+
