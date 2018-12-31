@@ -38,7 +38,8 @@ def is_empty(source_str):
 	return len(source_str) == 0
 
 def is_comment(source_str, file_ext):
-	if file_ext in ['.c', '.cpp', '.cxx', '.h', '.m', '.java']:
+	"""Returns True if the line appears to start with a comment, False otherwise."""
+	if file_ext in ['.c', '.cpp', '.cxx', '.h', '.m', '.java', '.rs']:
 		if source_str.find('//') == 0 or source_str.find('/*') == 0:
 			return True
 	elif file_ext in ['.py']:
@@ -50,7 +51,8 @@ def is_comment(source_str, file_ext):
 	return False
 
 def is_source_line(source_str, file_ext):
-	if file_ext in ['.c', '.cpp', '.cxx', '.h', '.m', '.java']:
+	"""Returns True if the line appears to contain source code, False otherwise."""
+	if file_ext in ['.c', '.cpp', '.cxx', '.h', '.m', '.java', '.rs']:
 		if source_str.find(';') > 0:
 			return True
 	elif file_ext in ['.py']:
@@ -83,12 +85,12 @@ def parse_line(line):
 	return "", "", ""
 
 def analyze_file(file, start_time, end_time, ignore_comments, ignore_empty, only_source_lines, extensions):
-	file_name, file_ext = os.path.splitext(file)
+	_, file_ext = os.path.splitext(file)
 	if file_ext not in extensions:
 		return
 	
 	p = subprocess.Popen(["git", "blame", file], stdout = subprocess.PIPE, stderr= subprocess.PIPE)
-	blameOutput,blameError = p.communicate()
+	blameOutput, _ = p.communicate()
 	blameLines = blameOutput.split('\n')
 
 	for line in blameLines:
@@ -107,37 +109,48 @@ def analyze_file(file, start_time, end_time, ignore_comments, ignore_empty, only
 				author_lines[author_str] = author_lines[author_str] + 1
 
 def analyze_repo(repo, start_time, end_time, ignore_comments, ignore_empty, only_source_lines, extensions):
-	for root, dirs, files in os.walk(repo):
+	for root, _, files in os.walk(repo):
 		for file in files:
 			analyze_file(os.path.join(root, file), start_time, end_time, ignore_comments, ignore_empty, only_source_lines, extensions)
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--repo", required=True, help="Path of the local repo to examine. ex: --repo /src/my_repo/")
-parser.add_argument("--start-time", required=False, help="Filter out lines that were modified before this time. ex: --repo start-time 2017-01-01")
-parser.add_argument("--end-time", required=False, help="Filter out lines that were modified after (or at) this time. ex: --repo end-time 2018-01-01")
-parser.add_argument("--ignore-comments", default=True, required=False, help="Filter out lines that start with a comment.")
-parser.add_argument("--ignore-empty", default=True, required=False, help="Filter out lines that only contain whitespace.")
-parser.add_argument("--only-source-lines", default=True, required=False, help="Only consider lines that appear to be source code lines, such as those that contain a semicolon in C-based languages.")
-parser.add_argument("--extensions", default=".c,.cpp,.h,.m,.py", required=False, help="Only consider files with certain extensions. ex: --extensions .c,.cpp,.h")
-args = parser.parse_args()
+def main():
+	"""Entry point for the app."""
+	
+	parser = argparse.ArgumentParser()
+	parser.add_argument("--repo", required=True, help="Path of the local repo to examine. ex: --repo /src/my_repo/")
+	parser.add_argument("--start-time", required=False, help="Filter out lines that were modified before this time. ex: --repo start-time 2017-01-01")
+	parser.add_argument("--end-time", required=False, help="Filter out lines that were modified after (or at) this time. ex: --repo end-time 2018-01-01")
+	parser.add_argument("--ignore-comments", default=True, required=False, help="Filter out lines that start with a comment.")
+	parser.add_argument("--ignore-empty", default=True, required=False, help="Filter out lines that only contain whitespace.")
+	parser.add_argument("--only-source-lines", default=True, required=False, help="Only consider lines that appear to be source code lines, such as those that contain a semicolon in C-based languages.")
+	parser.add_argument("--extensions", default=".c,.cpp,.h,.m,.py,.rs", required=False, help="Only consider files with certain extensions. ex: --extensions .c,.cpp,.h")
+	args = parser.parse_args()
 
-start_time = 0
-end_time = sys.maxint
-extensions = args.extensions.split(',')
+	start_time = 0
+	end_time = sys.maxint
+	extensions = args.extensions.split(',')
 
-if args.start_time is not None:
-	start_time = time.mktime(datetime.datetime.strptime(args.start_time, "%Y-%m-%d").timetuple())
-if args.end_time is not None:
-	end_time = time.mktime(datetime.datetime.strptime(args.end_time, "%Y-%m-%d").timetuple())
+	if args.start_time is not None:
+		start_time = time.mktime(datetime.datetime.strptime(args.start_time, "%Y-%m-%d").timetuple())
+	if args.end_time is not None:
+		end_time = time.mktime(datetime.datetime.strptime(args.end_time, "%Y-%m-%d").timetuple())
 
-full_path = os.path.realpath(args.repo)
-os.chdir(full_path)
-analyze_repo(full_path, start_time, end_time, args.ignore_comments, args.ignore_empty, args.only_source_lines, extensions)
+	full_path = os.path.realpath(args.repo)
+	os.chdir(full_path)
 
-total = 0
-for author in author_lines:
-	print author + "\t" + str(author_lines[author])
-	total += author_lines[author]
+	print("Examining the following repository: " + full_path)
+	print("Counting lines of code in files with the following extensions: " + args.extensions)
+	print("-" * 80)
 
-print "Total\t" + str(total)
+	analyze_repo(full_path, start_time, end_time, args.ignore_comments, args.ignore_empty, args.only_source_lines, extensions)
 
+	total = 0
+	for author in author_lines:
+		print(author + ":\t" + str(author_lines[author]))
+		total += author_lines[author]
+
+	print("-" * 80)
+	print("Total:\t" + str(total))
+
+if __name__ == "__main__":
+	main()
