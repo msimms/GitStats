@@ -1,3 +1,5 @@
+[![MIT license](http://img.shields.io/badge/license-MIT-brightgreen.svg)](http://opensource.org/licenses/MIT)
+
 # GitStats
 
 This project exists to perform SLOC (Source Line of Code) counts on local git repositories and to break that information down by author. It accomplishes this by performing a recursive `git blame` on each source file in the repo.
