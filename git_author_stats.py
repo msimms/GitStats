@@ -63,7 +63,7 @@ def is_source_line(source_str, file_ext):
 def parse_line(line):
 	try:
 		ascii_line = line.decode('ascii')
-		left_paren_index = line.find('(')
+		left_paren_index = line.find(b'(')
 
 		if left_paren_index >= 0:
 			sub_line = ascii_line[left_paren_index + 1:]
@@ -91,7 +91,7 @@ def analyze_file(file, start_time, end_time, ignore_comments, ignore_empty, only
 	
 	p = subprocess.Popen(["git", "blame", file], stdout = subprocess.PIPE, stderr= subprocess.PIPE)
 	blame_output, _ = p.communicate()
-	blame_lines = blame_output.split('\n')
+	blame_lines = blame_output.split(b'\n')
 
 	for line in blame_lines:
 		author_str, timestamp_str, source_str = parse_line(line)
