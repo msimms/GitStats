@@ -90,20 +90,20 @@ def analyze_file(file, start_time, end_time, ignore_comments, ignore_empty, only
 		return
 	
 	p = subprocess.Popen(["git", "blame", file], stdout = subprocess.PIPE, stderr= subprocess.PIPE)
-	blameOutput, _ = p.communicate()
-	blameLines = blameOutput.split('\n')
+	blame_output, _ = p.communicate()
+	blame_lines = blame_output.split('\n')
 
-	for line in blameLines:
+	for line in blame_lines:
 		author_str, timestamp_str, source_str = parse_line(line)
 
 		if len(author_str) > 0 and len(timestamp_str) > 0 and len(source_str) > 0:
 			timestamp = time.mktime(datetime.datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S").timetuple())
-			strippedStr = source_str.strip()
-			if ignore_comments and is_comment(strippedStr, file_ext):
+			stripped_str = source_str.strip()
+			if ignore_comments and is_comment(stripped_str, file_ext):
 				continue
-			if ignore_empty and is_empty(strippedStr):
+			if ignore_empty and is_empty(stripped_str):
 				continue
-			if only_source_lines and not is_source_line(strippedStr, file_ext):
+			if only_source_lines and not is_source_line(stripped_str, file_ext):
 				continue
 			if timestamp >= start_time and timestamp < end_time:
 				author_lines[author_str] = author_lines[author_str] + 1
