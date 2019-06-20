@@ -127,7 +127,10 @@ def main():
 	args = parser.parse_args()
 
 	start_time = 0
-	end_time = sys.maxint
+	if sys.version_info[0] < 3:
+		end_time = sys.maxint
+	else:
+		end_time = sys.maxsize
 	extensions = args.extensions.split(',')
 
 	if args.start_time is not None:
